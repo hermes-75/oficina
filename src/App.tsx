@@ -367,6 +367,9 @@ export default function App() {
         </header>
 
         <Office agents={agents} selectedAgentId={selectedAgentId} onSelect={setSelectedAgentId} />
+        <div className="office-footer">
+          <span>↑↓ Agentes deambulan por la oficina</span>
+        </div>
       </section>
 
       <aside className="side-panel" aria-label="Control Hermes">
@@ -395,17 +398,75 @@ function Office({
   return (
     <div className="office-floor">
       <div className="room-grid" />
-      <div className="zone coffee">Cafe</div>
-      <div className="zone board">Pizarra</div>
-      <div className="zone archive">Archivo</div>
-      <div className="zone sofa">Sofa</div>
 
+      {/* ── Paredes divisorias ── */}
+      <div className="wall wall-h-a" />
+      <div className="wall wall-h-b" />
+      <div className="wall wall-v" />
+
+      {/* ── Ventana ── */}
+      <div className="window-segment">
+        <span className="window-bar" />
+        <span className="window-bar" />
+        <span className="window-bar" />
+      </div>
+
+      {/* ── Zona Cafe ── */}
+      <div className="zone coffee">
+        <div className="furniture coffee-counter" />
+        <div className="furniture coffee-cup" />
+        <div className="zone-label">Cafe</div>
+      </div>
+
+      {/* ── Zona Pizarra ── */}
+      <div className="zone board">
+        <div className="furniture whiteboard-frame">
+          <div className="whiteboard-surface">
+            <span className="whiteboard-mark" />
+            <span className="whiteboard-mark m2" />
+            <span className="whiteboard-mark m3" />
+          </div>
+        </div>
+        <div className="zone-label">Pizarra</div>
+      </div>
+
+      {/* ── Zona Archivo ── */}
+      <div className="zone archive">
+        <div className="furniture shelf-unit">
+          <div className="shelf-row"><span /><span /></div>
+          <div className="shelf-row"><span /><span /></div>
+          <div className="shelf-row"><span /><span /></div>
+        </div>
+        <div className="zone-label">Archivo</div>
+      </div>
+
+      {/* ── Zona Sofa ── */}
+      <div className="zone sofa">
+        <div className="furniture sofa-seat">
+          <div className="sofa-cushion" />
+          <div className="sofa-arm" />
+        </div>
+        <div className="zone-label">Sofa</div>
+      </div>
+
+      {/* ── Planta decorativa ── */}
+      <div className="decor plant">
+        <div className="plant-pot" />
+        <div className="plant-leaves" />
+      </div>
+
+      {/* ── Alfombra central ── */}
+      <div className="decor rug" />
+
+      {/* ── Mesas de trabajo ── */}
       {agents.map((agent) => (
         <div
           key={`desk_${agent.id}`}
           className={`desk ${agent.status === "working" ? "desk-active" : ""}`}
           style={{ left: `${agent.desk.x}%`, top: `${agent.desk.y}%` }}
         >
+          <div className="desk-monitor" />
+          <div className="desk-top" />
           <span>{agent.name}</span>
         </div>
       ))}

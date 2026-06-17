@@ -170,28 +170,377 @@ h2 {
   color: rgba(255, 255, 255, 0.76);
   font-size: 12px;
   background: rgba(255, 255, 255, 0.07);
-  z-index: 1;
+  z-index: 2;
+}
+
+.zone-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
 }
 
 .zone.coffee {
-  left: 8%;
-  top: 15%;
+  left: 6%;
+  top: 14%;
+  width: 14%;
+  height: 18%;
 }
 
 .zone.board {
-  left: 41%;
-  top: 8%;
-  width: 18%;
+  left: 40%;
+  top: 6%;
+  width: 20%;
+  height: 14%;
 }
 
 .zone.archive {
-  right: 6%;
-  top: 14%;
+  right: 5%;
+  top: 13%;
+  width: 14%;
+  height: 20%;
 }
 
 .zone.sofa {
-  right: 7%;
-  bottom: 11%;
+  right: 6%;
+  bottom: 10%;
+  width: 16%;
+  height: 16%;
+}
+
+/* ── Muebles: Cafe ── */
+
+.furniture {
+  pointer-events: none;
+}
+
+.coffee-counter {
+  position: absolute;
+  bottom: 6px;
+  left: 10%;
+  width: 80%;
+  height: 20px;
+  background: linear-gradient(180deg, #4a3d32, #3d3229);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 1;
+}
+
+.coffee-cup {
+  position: absolute;
+  top: 30%;
+  left: 42%;
+  width: 10px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0 0 3px 3px;
+  background: #1a1d1c;
+  z-index: 2;
+}
+
+.coffee-cup::before {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 2px;
+  width: 4px;
+  height: 6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-left: 0;
+  border-radius: 0 3px 3px 0;
+}
+
+.coffee-cup::after {
+  content: "~";
+  position: absolute;
+  top: 2px;
+  left: 1px;
+  font-size: 10px;
+  color: rgba(244, 201, 93, 0.6);
+  line-height: 1;
+}
+
+/* ── Muebles: Pizarra ── */
+
+.whiteboard-frame {
+  position: absolute;
+  top: 8px;
+  left: 10%;
+  width: 80%;
+  height: 55%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(30, 40, 45, 0.7);
+  z-index: 1;
+}
+
+.whiteboard-surface {
+  position: absolute;
+  inset: 3px;
+  background: rgba(40, 55, 60, 0.5);
+  overflow: hidden;
+}
+
+.whiteboard-mark {
+  position: absolute;
+  display: block;
+  width: 16px;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0.35;
+  border-radius: 1px;
+}
+
+.whiteboard-mark.m2 {
+  top: 30%;
+  left: 20%;
+  width: 22px;
+  background: var(--work);
+  opacity: 0.3;
+}
+
+.whiteboard-mark.m3 {
+  top: 55%;
+  left: 35%;
+  width: 14px;
+  background: #ff8f70;
+  opacity: 0.25;
+}
+
+/* ── Muebles: Archivo ── */
+
+.shelf-unit {
+  position: absolute;
+  top: 10%;
+  left: 12%;
+  width: 76%;
+  height: 70%;
+  display: grid;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 2px;
+  z-index: 1;
+}
+
+.shelf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2px;
+}
+
+.shelf-row span {
+  display: block;
+  width: 70%;
+  height: 70%;
+  margin: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 45%, transparent 50%);
+}
+
+.shelf-row span:first-child {
+  background: linear-gradient(180deg, rgba(102, 217, 201, 0.08), rgba(102, 217, 201, 0.04));
+}
+
+.shelf-row:last-child span:first-child {
+  background: linear-gradient(180deg, rgba(244, 201, 93, 0.08), rgba(244, 201, 93, 0.04));
+}
+
+/* ── Muebles: Sofa ── */
+
+.sofa-seat {
+  position: absolute;
+  bottom: 22%;
+  left: 10%;
+  width: 80%;
+  height: 45%;
+  z-index: 1;
+}
+
+.sofa-cushion {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  bottom: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(60, 70, 75, 0.7), rgba(45, 55, 60, 0.6));
+  border-radius: 3px 3px 0 0;
+}
+
+.sofa-arm {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: 0;
+  height: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(55, 65, 70, 0.6);
+  border-radius: 0 0 2px 2px;
+}
+
+/* ── Paredes ── */
+
+.wall {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.wall-h-a {
+  left: 26px;
+  right: 26px;
+  top: 47%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 28px,
+    transparent 28px,
+    transparent 32px
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.wall-h-b {
+  left: 26px;
+  right: 26px;
+  top: 23%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 28px,
+    transparent 28px,
+    transparent 32px
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.wall-v {
+  left: 50%;
+  top: 26px;
+  bottom: 26px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 28px,
+    transparent 28px,
+    transparent 32px
+  );
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%);
+}
+
+/* ── Ventana ── */
+
+.window-segment {
+  position: absolute;
+  left: 41%;
+  top: 6px;
+  width: 18%;
+  height: 18px;
+  display: flex;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(100, 180, 200, 0.06);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.window-bar {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(100, 180, 200, 0.04);
+}
+
+/* ── Decoracion ── */
+
+.decor {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.decor.plant {
+  left: 27%;
+  top: 50%;
+  width: 24px;
+  height: 36px;
+}
+
+.plant-pot {
+  position: absolute;
+  bottom: 0;
+  left: 2px;
+  right: 2px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(120, 90, 70, 0.4);
+  border-radius: 0 0 2px 2px;
+}
+
+.plant-leaves {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 20px;
+  border-radius: 50% 50% 0 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(80, 180, 100, 0.15), transparent 70%);
+}
+
+.plant-leaves::before {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: -4px;
+  width: 8px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(80, 180, 100, 0.1), transparent);
+}
+
+.plant-leaves::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: -4px;
+  width: 8px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(80, 180, 100, 0.1), transparent);
+}
+
+.decor.rug {
+  left: 38%;
+  top: 41%;
+  width: 24%;
+  height: 8%;
+  border: 1px solid rgba(244, 201, 93, 0.08);
+  background: rgba(244, 201, 93, 0.04);
+  border-radius: 4px;
+  z-index: 0;
+}
+
+/* ── Office footer ── */
+
+.office-footer {
+  padding: 8px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  opacity: 0.6;
+  background: rgba(16, 19, 21, 0.3);
 }
 
 /* ── Puertas ── */
@@ -283,8 +632,49 @@ h2 {
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 45%),
     var(--desk);
   color: rgba(255, 255, 255, 0.84);
-  font-size: 11px;
+  font-size: 10px;
   text-align: center;
+  z-index: 1;
+}
+
+.desk span {
+  position: relative;
+  z-index: 2;
+  margin-top: 20px;
+}
+
+.desk-monitor {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 24px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  background: linear-gradient(180deg, rgba(60, 75, 85, 0.6), rgba(40, 55, 65, 0.5));
+  z-index: 1;
+  border-radius: 2px 2px 0 0;
+}
+
+.desk-monitor::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0 0 1px 1px;
+}
+
+.desk-top {
+  position: absolute;
+  bottom: 8px;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.08);
   z-index: 1;
 }
 
