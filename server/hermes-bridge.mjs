@@ -9,6 +9,22 @@ const HERMES_MOCK = process.env.HERMES_MOCK !== "0";
 const wss = new WebSocketServer({ port: PORT });
 let runSeq = 0;
 
+const TASK_MARKER_PROMPT = `
+Eres hermes1, el agente principal de una oficina visual. Responde normalmente al usuario, pero si divides el trabajo o delegas, emite marcas estructuradas en lineas independientes para que la interfaz actualice tareas.
+
+Formato exacto:
+[[TASK agent=hermes2 status=running title="Buscar fuentes sobre el tema" progress="Revisando fuentes relevantes"]]
+[[TASK agent=hermes2 status=done title="Buscar fuentes sobre el tema" result="Fuentes revisadas"]]
+
+Reglas:
+- Usa status=running cuando una subtarea empieza o cambia de progreso.
+- Usa status=done cuando una subtarea termina.
+- Usa status=failed si una subtarea falla.
+- Usa agent=hermes2, hermes3, hermes4, etc. si delegas.
+- No uses marcas para la respuesta final de hermes1 salvo que realmente quieras actualizar una subtarea.
+- Las marcas deben ir en lineas propias y no deben sustituir la respuesta legible para el usuario.
+`.trim();
+
 function now() {
   return new Date().toISOString();
 }
@@ -80,6 +96,98 @@ function emitTaskCompleted(ws, taskId, agentId, result) {
   });
 }
 
+function emitTaskFailed(ws, taskId, agentId, error) {
+  send(ws, {
+    type: "task.failed",
+    taskId,
+    agentId,
+    error,
+    completedAt: now(),
+  });
+}
+
+function unquoteValue(value) {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function parseMarkerAttributes(raw) {
+  const attrs = {};
+  const re = /(\w+)=("([^"\\]|\\.)*"|'([^'\\]|\\.)*'|[^\s]+)/g;
+  let match;
+  while ((match = re.exec(raw))) {
+    attrs[match[1]] = unquoteValue(match[2]).replace(/\\"/g, '"').replace(/\\'/g, "'");
+  }
+  return attrs;
+}
+
+function parseTaskMarkers(text) {
+  const markerRe = /\[\[TASK\s+([^\]]+)\]\]/g;
+  const markers = [];
+  let match;
+  while ((match = markerRe.exec(text))) {
+    markers.push(parseMarkerAttributes(match[1]));
+  }
+  return {
+    cleanText: text.replace(markerRe, "").replace(/\n{3,}/g, "\n\n").trim(),
+    markers,
+  };
+}
+
+function markerTaskId(parentTaskId, agentId, title) {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 48);
+  return `${parentTaskId}_${agentId}_${slug || "subtask"}`;
+}
+
+function applyTaskMarkers(ws, parentTask, markers) {
+  for (const marker of markers) {
+    const agentId = marker.agent || marker.agentId;
+    const status = marker.status || "running";
+    const title = marker.title || marker.task || `Subtarea de ${agentId}`;
+    if (!agentId) continue;
+
+    const taskId = marker.id || markerTaskId(parentTask.id, agentId, title);
+    const progress = marker.progress || marker.message || title;
+    const result = marker.result || progress;
+    if (status === "done" || status === "completed") {
+      emitTaskCompleted(ws, taskId, agentId, result);
+      send(ws, { type: "agent.said", agentId, taskId, text: result });
+      continue;
+    }
+
+    if (status === "failed" || status === "error") {
+      emitTaskFailed(ws, taskId, agentId, result);
+      send(ws, { type: "agent.said", agentId, taskId, text: result });
+      continue;
+    }
+
+    const task = {
+      id: taskId,
+      parentId: parentTask.id,
+      title,
+      agentId,
+      status: "running",
+      progress,
+      createdAt: now(),
+      startedAt: now(),
+      topic: parentTask.topic,
+    };
+    emitTaskStarted(ws, task);
+    emitTaskProgress(ws, taskId, agentId, progress);
+    send(ws, { type: "agent.said", agentId, taskId, text: progress });
+  }
+}
+
 function runMock(ws, task, message) {
   const topic = topicFrom(message);
   const plan = [
@@ -144,7 +252,8 @@ function runMock(ws, task, message) {
 }
 
 function runHermes(ws, task, message) {
-  const args = ["-p", HERMES_PROFILE, "chat", "-q", message, "--quiet"];
+  const promptedMessage = `${TASK_MARKER_PROMPT}\n\nTarea del usuario:\n${message}`;
+  const args = ["-p", HERMES_PROFILE, "chat", "-q", promptedMessage, "--quiet"];
   const child = spawn(HERMES_BIN, args, {
     stdio: ["ignore", "pipe", "pipe"],
     env: process.env,
@@ -156,7 +265,6 @@ function runHermes(ws, task, message) {
   child.stdout.on("data", (chunk) => {
     const delta = chunk.toString();
     finalText += delta;
-    send(ws, { type: "chat.delta", taskId: task.id, agentId: "hermes1", delta });
     emitTaskProgress(ws, task.id, "hermes1", "Hermes esta generando respuesta...");
   });
 
@@ -176,17 +284,14 @@ function runHermes(ws, task, message) {
 
   child.on("close", (code) => {
     if (code !== 0) {
-      send(ws, {
-        type: "task.failed",
-        taskId: task.id,
-        agentId: "hermes1",
-        error: stderr.trim() || `hermes salio con codigo ${code}`,
-        completedAt: now(),
-      });
+      emitTaskFailed(ws, task.id, "hermes1", stderr.trim() || `hermes salio con codigo ${code}`);
       return;
     }
 
-    const clean = finalText.trim() || "Sin respuesta.";
+    const parsed = parseTaskMarkers(finalText);
+    applyTaskMarkers(ws, task, parsed.markers);
+    const clean = parsed.cleanText || finalText.trim() || "Sin respuesta.";
+    send(ws, { type: "chat.delta", taskId: task.id, agentId: "hermes1", delta: clean });
     send(ws, { type: "chat.final", taskId: task.id, agentId: "hermes1", message: clean });
     emitTaskCompleted(ws, task.id, "hermes1", clean);
   });

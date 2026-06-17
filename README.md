@@ -119,6 +119,29 @@ docker compose up -d --build
 
 ---
 
+## Subtareas Estructuradas
+
+En modo Hermes real, el bridge inyecta instrucciones a `hermes1` para que pueda actualizar la oficina con subtareas usando marcas en lineas independientes:
+
+```text
+[[TASK agent=hermes2 status=running title="Buscar fuentes" progress="Revisando fuentes relevantes"]]
+[[TASK agent=hermes2 status=done title="Buscar fuentes" result="Fuentes revisadas"]]
+```
+
+Campos soportados:
+
+| Campo | Ejemplo | Uso |
+| --- | --- | --- |
+| `agent` | `hermes2` | Agente visual que recibe la subtarea |
+| `status` | `running`, `done`, `failed` | Estado que se refleja en tareas |
+| `title` | `Buscar fuentes` | Titulo de la subtarea |
+| `progress` | `Revisando fuentes` | Frase de trabajo visible |
+| `result` | `Fuentes revisadas` | Resultado al completar o fallar |
+
+El bridge elimina esas marcas del chat final visible y las convierte en eventos para la UI.
+
+---
+
 ## Ejecutar En Desarrollo
 
 ```bash
