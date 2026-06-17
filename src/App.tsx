@@ -3,7 +3,6 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
-  Bot,
   CheckCircle2,
   CircleStop,
   MessageSquareText,
@@ -12,7 +11,8 @@ import {
   WifiOff,
 } from "lucide-react";
 import type { ActivityEvent, Agent, BridgeEvent, ChatMessage, Task } from "./types";
-import { initialAgents, makeAgent, poi, workingPhrase } from "./officeData";
+import { initialAgents, makeAgent, poi, resolveFacing, workingPhrase } from "./officeData";
+import PixelAvatar from "./PixelAvatar";
 
 const BRIDGE_URL = import.meta.env.VITE_HERMES_BRIDGE_URL ?? "ws://localhost:8787";
 
@@ -57,6 +57,7 @@ export default function App() {
     },
   ]);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const poseTimersRef = useRef(new Map<string, number>());
 
   const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) ?? agents[0];
   const activeTasks = tasks.filter((task) => task.status === "running");
@@ -73,6 +74,29 @@ export default function App() {
         ? current.map((agent) => (agent.id === agentId ? next : agent))
         : [...current, next];
     });
+  }
+
+  function setAgentMotion(agentId: string, motion: Agent["motion"], delayToIdleMs?: number) {
+    const timerMap = poseTimersRef.current;
+    const oldTimer = timerMap.get(agentId);
+    if (oldTimer) {
+      window.clearTimeout(oldTimer);
+      timerMap.delete(agentId);
+    }
+
+    upsertAgent(agentId, { motion });
+
+    if (delayToIdleMs && delayToIdleMs > 0) {
+      const timer = window.setTimeout(() => {
+        timerMap.delete(agentId);
+        setAgents((current) =>
+          current.map((agent): Agent =>
+            agent.id === agentId ? { ...agent, motion: "idle" } : agent,
+          ),
+        );
+      }, delayToIdleMs);
+      timerMap.set(agentId, timer);
+    }
   }
 
   function pushActivity(event?: ActivityEvent) {
@@ -116,6 +140,8 @@ export default function App() {
         lastActivity: event.task.progress ?? `Trabajando en ${event.task.title}`,
         lastSaid: workingPhrase(event.task.title, event.task.progress),
         phraseKind: "working",
+        motion: "idle",
+        facing: "down",
       });
       setAgents((current) =>
         current.map((agent) =>
@@ -140,6 +166,8 @@ export default function App() {
         lastActivity: event.progress,
         lastSaid: workingPhrase(task?.title, event.progress),
         phraseKind: "working",
+        motion: "idle",
+        facing: "down",
       });
       setAgents((current) =>
         current.map((agent) =>
@@ -199,23 +227,27 @@ export default function App() {
         lastActivity: "Tarea terminada",
         lastSaid: "Listo. Dejo esto registrado en tareas.",
         phraseKind: "working",
+        motion: "idle",
+        facing: "down",
       });
       pushActivity(event.activity);
       window.setTimeout(() => {
         setAgents((current) =>
-          current.map((agent) => {
+          current.map((agent): Agent => {
             if (agent.id !== event.agentId || agent.status === "working") return agent;
             const { picked, phrase } = nextIdlePosition(agent);
             return {
               ...agent,
-              status: "wandering",
+              status: "wandering" as const,
               position: picked.position,
+              motion: "walk" as const,
               lastActivity: picked.id,
               lastSaid: phrase,
               phraseKind: "idle",
             };
           }),
         );
+        setAgentMotion(event.agentId, "walk", 900);
       }, 2500);
       return;
     }
@@ -235,6 +267,8 @@ export default function App() {
         lastActivity: event.error,
         lastSaid: "He tenido un fallo con esta tarea.",
         phraseKind: "working",
+        motion: "idle",
+        facing: "down",
       });
     }
   }
@@ -266,20 +300,39 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setAgents((current) =>
-        current.map((agent) => {
+      setAgents((current) => {
+        const next = current.map((agent): Agent => {
           if (agent.status === "working") return agent;
           const { picked, phrase } = nextIdlePosition(agent);
+          const facing = resolveFacing(agent.position, picked.position);
+          const timerMap = poseTimersRef.current;
+          const oldTimer = timerMap.get(agent.id);
+          if (oldTimer) {
+            window.clearTimeout(oldTimer);
+            timerMap.delete(agent.id);
+          }
+          const idleTimer = window.setTimeout(() => {
+            timerMap.delete(agent.id);
+            setAgents((latest) =>
+              latest.map((item) =>
+                item.id === agent.id ? { ...item, motion: "idle" } : item,
+              ),
+            );
+          }, 900);
+          timerMap.set(agent.id, idleTimer);
           return {
             ...agent,
             status: "wandering",
             position: picked.position,
+            facing,
+            motion: "walk",
             lastActivity: picked.id,
             lastSaid: phrase,
             phraseKind: "idle",
           };
-        }),
-      );
+        });
+        return next;
+      });
     }, 7000);
 
     return () => window.clearInterval(timer);
@@ -297,10 +350,10 @@ export default function App() {
     <main className="app-shell">
       <section className="office-panel" aria-label="Oficina Hermes">
         <header className="top-strip">
-          <div>
-            <span className="eyebrow">Hermes Lite Office</span>
-            <h1>Chat con Hermes 1</h1>
-          </div>
+        <div>
+          <span className="eyebrow">Hermes Lite Office</span>
+          <h1>Chat con Hermes 1</h1>
+        </div>
           <div className={`connection-pill ${connected ? "online" : "offline"}`}>
             {connected ? <Wifi size={16} /> : <WifiOff size={16} />}
             <span>{connected ? `Conectado (${mode})` : "Sin bridge"}</span>
@@ -354,7 +407,7 @@ function Office({
       {agents.map((agent) => (
         <button
           key={agent.id}
-          className={`agent ${selectedAgentId === agent.id ? "selected" : ""} ${agent.status}`}
+          className={`agent ${selectedAgentId === agent.id ? "selected" : ""} ${agent.status} ${agent.motion}`}
           style={{
             left: `${agent.position.x}%`,
             top: `${agent.position.y}%`,
@@ -365,9 +418,7 @@ function Office({
           title={`${agent.name}: ${agent.lastActivity ?? agent.status}`}
         >
           <span className="agent-shadow" />
-          <span className="agent-body">
-            <Bot size={22} />
-          </span>
+          <PixelAvatar agent={agent} />
           <span className="agent-name">{agent.name}</span>
           {agent.lastSaid ? <span className={`bubble ${agent.phraseKind}`}>{agent.lastSaid}</span> : null}
         </button>

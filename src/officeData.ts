@@ -1,4 +1,4 @@
-import type { Agent, Position } from "./types";
+import type { Agent, Facing, Position } from "./types";
 
 export const desks: Record<string, Position> = {
   hermes1: { x: 31, y: 35 },
@@ -40,6 +40,9 @@ export const initialAgents: Agent[] = [
     name: "Hermes 1",
     role: "Principal",
     color: "#f4c95d",
+    spritePath: "/characters/Premade_Character_48x48_09.png",
+    facing: "down",
+    motion: "idle",
     status: "wandering",
     desk: desks.hermes1,
     position: { x: 50, y: 16 },
@@ -54,6 +57,9 @@ export const agentPresets: Record<string, Omit<Agent, "status" | "position" | "l
     name: "Hermes 2",
     role: "Investigacion",
     color: "#66d9c9",
+    spritePath: "/characters/Premade_Character_48x48_02.png",
+    facing: "down",
+    motion: "idle",
     desk: desks.hermes2,
   },
   hermes3: {
@@ -61,6 +67,9 @@ export const agentPresets: Record<string, Omit<Agent, "status" | "position" | "l
     name: "Hermes 3",
     role: "Redaccion",
     color: "#ff8f70",
+    spritePath: "/characters/Premade_Character_48x48_03.png",
+    facing: "down",
+    motion: "idle",
     desk: desks.hermes3,
   },
   hermes4: {
@@ -68,6 +77,9 @@ export const agentPresets: Record<string, Omit<Agent, "status" | "position" | "l
     name: "Hermes 4",
     role: "Revision",
     color: "#9fb7ff",
+    spritePath: "/characters/Premade_Character_48x48_04.png",
+    facing: "down",
+    motion: "idle",
     desk: desks.hermes4,
   },
 };
@@ -86,6 +98,7 @@ export function makeAgent(agentId: string): Agent {
     status: "wandering",
     position: { x: 50, y: 50 },
     lastActivity: "Detectado automaticamente",
+    motion: "idle",
     phraseKind: "idle",
   };
 }
@@ -95,4 +108,11 @@ export function workingPhrase(taskTitle?: string, progress?: string) {
   if (!taskTitle) return "Estoy trabajando en la tarea.";
   const compact = taskTitle.length > 44 ? `${taskTitle.slice(0, 41)}...` : taskTitle;
   return `Trabajando en: ${compact}`;
+}
+
+export function resolveFacing(from: Position, to: Position): Facing {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? "right" : "left";
+  return dy >= 0 ? "down" : "up";
 }

@@ -1,4 +1,6 @@
 export type AgentStatus = "idle" | "wandering" | "returning" | "working" | "done" | "failed";
+export type Facing = "right" | "up" | "left" | "down";
+export type AgentMotion = "idle" | "walk";
 
 export interface Position {
   x: number;
@@ -10,6 +12,9 @@ export interface Agent {
   name: string;
   role: string;
   color: string;
+  spritePath: string;
+  facing: Facing;
+  motion: AgentMotion;
   status: AgentStatus;
   desk: Position;
   position: Position;
