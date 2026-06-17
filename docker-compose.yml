@@ -1,0 +1,15 @@
+services:
+  oficina:
+    build:
+      context: .
+      args:
+        VITE_HERMES_BRIDGE_URL: ws://localhost:8787
+    ports:
+      - "5174:5174"
+      - "8787:8787"
+    environment:
+      # Modo demo (sin Hermes CLI real)
+      - HERMES_MOCK=1
+      - HERMES_BRIDGE_PORT=8787
+      - VITE_HERMES_BRIDGE_URL=ws://localhost:8787
+    restart: unless-stopped
