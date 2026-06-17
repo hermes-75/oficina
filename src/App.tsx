@@ -11,7 +11,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import type { ActivityEvent, Agent, BridgeEvent, ChatMessage, Task } from "./types";
-import { initialAgents, makeAgent, poi, resolveFacing, workingPhrase } from "./officeData";
+import { initialAgents, doors, emoteForStatus, makeAgent, poi, resolveFacing, workingPhrase } from "./officeData";
 import PixelAvatar from "./PixelAvatar";
 
 const BRIDGE_URL = import.meta.env.VITE_HERMES_BRIDGE_URL ?? "ws://localhost:8787";
@@ -108,7 +108,7 @@ export default function App() {
     if (event.type === "bridge.ready") {
       setMode(event.mode);
       setConnected(true);
-      upsertAgent(event.primaryAgentId, { status: "wandering", lastActivity: "Conectado" });
+      upsertAgent(event.primaryAgentId, { status: "wandering", lastActivity: "Conectado", emote: undefined });
       return;
     }
 
@@ -142,6 +142,7 @@ export default function App() {
         phraseKind: "working",
         motion: "idle",
         facing: "down",
+        emote: emoteForStatus("working"),
       });
       setAgents((current) =>
         current.map((agent) =>
@@ -168,6 +169,7 @@ export default function App() {
         phraseKind: "working",
         motion: "idle",
         facing: "down",
+        emote: emoteForStatus("working"),
       });
       setAgents((current) =>
         current.map((agent) =>
@@ -229,6 +231,7 @@ export default function App() {
         phraseKind: "working",
         motion: "idle",
         facing: "down",
+        emote: emoteForStatus("done"),
       });
       pushActivity(event.activity);
       window.setTimeout(() => {
@@ -244,6 +247,7 @@ export default function App() {
               lastActivity: picked.id,
               lastSaid: phrase,
               phraseKind: "idle",
+              emote: undefined,
             };
           }),
         );
@@ -269,6 +273,7 @@ export default function App() {
         phraseKind: "working",
         motion: "idle",
         facing: "down",
+        emote: emoteForStatus("failed"),
       });
     }
   }
@@ -329,6 +334,7 @@ export default function App() {
             lastActivity: picked.id,
             lastSaid: phrase,
             phraseKind: "idle",
+            emote: undefined,
           };
         });
         return next;
@@ -404,6 +410,18 @@ function Office({
         </div>
       ))}
 
+      {doors.map((door) => (
+        <div
+          key={`door_${door.side}`}
+          className={`door door-${door.side}`}
+          style={{ left: `${door.position.x}%`, top: `${door.position.y}%` }}
+          title={door.label}
+        >
+          <span className="door-frame" />
+          <span className="door-leaf" />
+        </div>
+      ))}
+
       {agents.map((agent) => (
         <button
           key={agent.id}
@@ -420,6 +438,7 @@ function Office({
           <span className="agent-shadow" />
           <PixelAvatar agent={agent} />
           <span className="agent-name">{agent.name}</span>
+          {agent.emote ? <span className="agent-emote">{agent.emote}</span> : null}
           {agent.lastSaid ? <span className={`bubble ${agent.phraseKind}`}>{agent.lastSaid}</span> : null}
         </button>
       ))}

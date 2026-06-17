@@ -23,6 +23,7 @@ export interface Agent {
   lastActivity?: string;
   lastSaid?: string;
   phraseKind: "idle" | "working";
+  emote?: string;
 }
 
 export type TaskStatus = "running" | "done" | "failed" | "cancelled";

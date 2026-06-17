@@ -131,6 +131,8 @@ h2 {
   color: var(--bad);
 }
 
+/* ── Suelo oficina ── */
+
 .office-floor {
   position: relative;
   min-height: 660px;
@@ -155,6 +157,7 @@ h2 {
     linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.08) 50%, transparent 51%),
     linear-gradient(0deg, transparent 49%, rgba(255, 255, 255, 0.08) 50%, transparent 51%);
   background-size: 50% 50%;
+  z-index: 0;
 }
 
 .zone {
@@ -167,6 +170,7 @@ h2 {
   color: rgba(255, 255, 255, 0.76);
   font-size: 12px;
   background: rgba(255, 255, 255, 0.07);
+  z-index: 1;
 }
 
 .zone.coffee {
@@ -190,6 +194,83 @@ h2 {
   bottom: 11%;
 }
 
+/* ── Puertas ── */
+
+.door {
+  position: absolute;
+  width: 48px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.door-frame {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.door-leaf {
+  position: absolute;
+  inset: 2px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.12) 75%, transparent 75%);
+  background-size: 12px 12px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.door-bottom .door-leaf {
+  transform-origin: top center;
+}
+
+.door-right .door-leaf {
+  transform-origin: left center;
+}
+
+.agent:hover ~ .door .door-leaf,
+.agent.working ~ .door .door-leaf {
+  transform: scaleY(0.1);
+  opacity: 0.3;
+}
+
+.door-bottom {
+  width: 56px;
+  height: 44px;
+}
+
+.door-bottom .door-leaf::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.door-right {
+  width: 44px;
+  height: 56px;
+}
+
+.door-right .door-leaf::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+/* ── Mesas de trabajo ── */
+
 .desk {
   position: absolute;
   width: 96px;
@@ -204,11 +285,14 @@ h2 {
   color: rgba(255, 255, 255, 0.84);
   font-size: 11px;
   text-align: center;
+  z-index: 1;
 }
 
 .desk-active {
   box-shadow: 0 0 0 3px rgba(102, 217, 201, 0.18);
 }
+
+/* ── Agentes ── */
 
 .agent {
   --agent-color: var(--accent);
@@ -226,77 +310,153 @@ h2 {
     left 1.1s ease,
     top 1.1s ease,
     transform 160ms ease;
+  z-index: 10;
 }
 
 .agent:hover,
 .agent.selected {
   transform: translate(-50%, -50%) translateY(-3px);
+  z-index: 20;
+}
+
+.agent:hover::after,
+.agent.selected::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 48px;
+  height: 48px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--agent-color), transparent 70%);
+  opacity: 0.15;
+  pointer-events: none;
 }
 
 .agent-shadow {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-.pixel-avatar {
-  position: absolute;
   left: 12px;
-  top: -4px;
-  width: 48px;
-  height: 96px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  right: 12px;
+  bottom: 14px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 0;
 }
 
-.agent.walk .pixel-avatar {
-  animation: pixelFloat 700ms ease-in-out infinite alternate;
+.agent.working .agent-shadow {
+  background: rgba(102, 217, 201, 0.18);
 }
 
-.agent.done .pixel-avatar {
-  filter: saturate(0.95) brightness(1.05);
+/* ── Emotes ── */
+
+.agent-emote {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  font-size: 22px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 15;
+  animation: emotePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.agent.failed .pixel-avatar {
-  filter: grayscale(0.2) brightness(0.9);
+.agent.done .agent-emote {
+  animation: emotePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), floatUp 1.2s ease-out 0.3s forwards;
 }
+
+/* ── Nombre del agente ── */
 
 .agent-name {
   position: absolute;
   left: 50%;
-  top: 54px;
+  top: 52px;
   transform: translateX(-50%);
   max-width: 92px;
   white-space: nowrap;
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
+  letter-spacing: 0.3px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  text-transform: uppercase;
+  z-index: 5;
+  opacity: 0.85;
 }
+
+.agent.selected .agent-name {
+  opacity: 1;
+  color: var(--agent-color);
+}
+
+/* ── Burbuja de dialogo (estilo Hermes Town) ── */
 
 .bubble {
   position: absolute;
   left: 50%;
-  bottom: 76px;
+  bottom: 82px;
   transform: translateX(-50%);
   width: max-content;
-  max-width: 240px;
-  padding: 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(15, 18, 19, 0.9);
-  color: #f7fbf5;
-  font-size: 12px;
-  line-height: 1.25;
-  text-align: left;
+  max-width: 200px;
+  padding: 7px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: #f5f0e8;
+  color: #1a1d1c;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
   pointer-events: none;
+  word-break: break-word;
+  z-index: 15;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Flecha inferior pixelada (tail que apunta al agente) */
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #f5f0e8;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
+}
+
+.bubble::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid rgba(255, 255, 255, 0.35);
 }
 
 .bubble.working {
-  border-color: rgba(102, 217, 201, 0.42);
+  border-color: rgba(102, 217, 201, 0.5);
+  background: #eaf7f0;
+  color: #1a2e2a;
 }
+
+.bubble.working::after {
+  border-top-color: #eaf7f0;
+}
+
+.bubble.working::before {
+  border-top-color: rgba(102, 217, 201, 0.5);
+}
+
+/* ── Paneles laterales ── */
 
 .side-panel,
 .work-panel {
@@ -523,23 +683,68 @@ h2 {
   font-size: 13px;
 }
 
-@keyframes workPulse {
-  from {
-    transform: translateY(0);
+/* ── Animaciones ── */
+
+@keyframes pixelFloat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+@keyframes emotePop {
+  0% {
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
   }
-  to {
-    transform: translateY(-4px);
+  60% {
+    transform: translateX(-50%) scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
   }
 }
 
-@keyframes pixelFloat {
-  from {
-    transform: translateY(0);
-  }
+@keyframes floatUp {
   to {
-    transform: translateY(-2px);
+    transform: translateX(-50%) translateY(-14px);
+    opacity: 0;
   }
 }
+
+.agent.walk .pixel-avatar {
+  animation: pixelFloat 500ms ease-in-out infinite alternate;
+}
+
+.agent.working .pixel-avatar {
+  animation: workBob 800ms ease-in-out infinite alternate;
+}
+
+@keyframes workBob {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}
+
+.agent.done .pixel-avatar {
+  filter: saturate(0.95) brightness(1.05);
+}
+
+.agent.failed .pixel-avatar {
+  filter: grayscale(0.2) brightness(0.9);
+}
+
+.pixel-avatar {
+  position: absolute;
+  left: 12px;
+  top: -4px;
+  width: 48px;
+  height: 96px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 3;
+}
+
+/* ── Responsive ── */
 
 @media (max-width: 1180px) {
   .app-shell {
@@ -574,8 +779,8 @@ h2 {
   }
 
   .bubble {
-    max-width: 180px;
-    font-size: 11px;
+    max-width: 160px;
+    font-size: 10px;
   }
 
   .task-row {

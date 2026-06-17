@@ -116,3 +116,23 @@ export function resolveFacing(from: Position, to: Position): Facing {
   if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? "right" : "left";
   return dy >= 0 ? "down" : "up";
 }
+
+export const doors: Array<{ side: "left" | "right" | "bottom" | "top"; position: Position; label: string }> = [
+  { side: "bottom", position: { x: 50, y: 96 }, label: "Entrada" },
+  { side: "right", position: { x: 96, y: 50 }, label: "Salida" },
+];
+
+export function emoteForStatus(status: Agent["status"]): string | undefined {
+  switch (status) {
+    case "working":
+      return "⚡";
+    case "done":
+      return "✅";
+    case "failed":
+      return "❌";
+    case "wandering":
+      return undefined;
+    default:
+      return undefined;
+  }
+}
