@@ -10,6 +10,15 @@ services:
     environment:
       # Modo demo (sin Hermes CLI real)
       - HERMES_MOCK=1
+      # Para usar Hermes real instalado en el host:
+      # - HERMES_MOCK=0
+      # - HERMES_PROFILE=hermes1
+      # - HERMES_BIN=/usr/local/bin/hermes
+      # - HERMES_HOME=/root/.hermes
       - HERMES_BRIDGE_PORT=8787
       - VITE_HERMES_BRIDGE_URL=ws://localhost:8787
+    # Descomenta y ajusta estas rutas si Hermes esta instalado fuera del contenedor.
+    # volumes:
+    #   - /RUTA/REAL/DEL/HOST/hermes:/usr/local/bin/hermes:ro
+    #   - /RUTA/REAL/DEL/HOST/.hermes:/root/.hermes:ro
     restart: unless-stopped

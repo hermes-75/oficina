@@ -3,6 +3,7 @@ import { WebSocketServer } from "ws";
 
 const PORT = Number(process.env.HERMES_BRIDGE_PORT ?? 8787);
 const HERMES_PROFILE = process.env.HERMES_PROFILE ?? "hermes1";
+const HERMES_BIN = process.env.HERMES_BIN ?? "hermes";
 const HERMES_MOCK = process.env.HERMES_MOCK !== "0";
 
 const wss = new WebSocketServer({ port: PORT });
@@ -144,7 +145,7 @@ function runMock(ws, task, message) {
 
 function runHermes(ws, task, message) {
   const args = ["-p", HERMES_PROFILE, "chat", "-q", message, "--quiet"];
-  const child = spawn("hermes", args, {
+  const child = spawn(HERMES_BIN, args, {
     stdio: ["ignore", "pipe", "pipe"],
     env: process.env,
   });
@@ -233,4 +234,6 @@ wss.on("connection", (ws) => {
   });
 });
 
-console.log(`[Hermes Lite Bridge] ws://localhost:${PORT} (${HERMES_MOCK ? "mock" : "hermes"})`);
+console.log(
+  `[Hermes Lite Bridge] ws://localhost:${PORT} (${HERMES_MOCK ? "mock" : `hermes: ${HERMES_BIN}`})`,
+);

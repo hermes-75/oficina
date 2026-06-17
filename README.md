@@ -1,144 +1,177 @@
-# Oficina — Hermes Lite Office
+# Oficina - Hermes Lite Office
 
-App para chatear con agentes Hermes en una oficina virtual. Los agentes deambulan,
-reciben tareas, y se sientan a trabajar mientras ves el progreso en tiempo real.
+App para chatear con agentes Hermes en una oficina virtual. Los agentes deambulan, reciben tareas, y se sientan a trabajar mientras ves el progreso en tiempo real.
 
 ---
 
-## Ejecutar con Docker (producción)
+## Ejecutar con Docker (produccion)
 
 ```bash
-# Clonar y entrar
 git clone https://github.com/hermes-75/oficina
 cd oficina
 
-# Construir y arrancar
 docker compose up -d --build
 
-# Verificar
-curl http://localhost:5174               # → HTML del frontend
-curl -o /dev/null -s -w '%{http_code}' http://localhost:5174   # → 200
+curl http://localhost:5174
+curl -o /dev/null -s -w '%{http_code}' http://localhost:5174
+```
 
-# Probar WebSocket (necesita wscat o similar)
+Para probar el WebSocket:
+
+```bash
 npm i -g wscat
 wscat -c ws://localhost:8787
-# Debería responder: {"type":"bridge.ready","mode":"mock",...}
 ```
 
-### Puertos
+Deberia responder algo como:
 
-| Puerto | Servicio       |
-|--------|----------------|
-| 5174   | Frontend web   |
-| 8787   | Bridge WebSocket |
-
-### Modo demo (por defecto)
-
-El bridge responde con tareas simuladas automáticas. No necesita Hermes CLI.
-
+```json
+{"type":"bridge.ready","mode":"mock","primaryAgentId":"hermes1"}
 ```
+
+## Puertos
+
+| Puerto | Servicio |
+| --- | --- |
+| `5174` | Frontend web |
+| `8787` | Bridge WebSocket |
+
+## Modo Demo
+
+El bridge responde con tareas simuladas automaticas. No necesita Hermes CLI.
+
+```bash
 docker compose up -d
 ```
 
-### Modo real (con Hermes CLI)
+## Modo Hermes Real
 
-Para conectar con el CLI de Hermes real, necesitas:
+Para conectar con el CLI real de Hermes, el contenedor debe poder ejecutar Hermes y leer su configuracion.
 
-1. Tener `hermes` instalado **dentro del contenedor** o **montado desde el host**
-2. Crear un docker-compose.override.yml:
+### Hermes instalado dentro del contenedor
 
 ```yaml
 services:
   oficina:
     environment:
-      - HERMES_MOCK=0
-      - HERMES_PROFILE=hermes1
-      - HERMES_BRIDGE_PORT=8787
+      HERMES_MOCK: "0"
+      HERMES_PROFILE: "hermes1"
+      HERMES_BRIDGE_PORT: "8787"
+```
+
+### Hermes instalado fuera del contenedor
+
+Si Hermes ya esta instalado en el host, monta el binario y la carpeta de configuracion:
+
+```yaml
+services:
+  oficina:
+    environment:
+      HERMES_MOCK: "0"
+      HERMES_PROFILE: "hermes1"
+      HERMES_BRIDGE_PORT: "8787"
+      HERMES_BIN: "/usr/local/bin/hermes"
+      HERMES_HOME: "/root/.hermes"
     volumes:
-      - /usr/local/bin/hermes:/usr/local/bin/hermes:ro       # Montar CLI
-      - $HOME/.hermes:/root/.hermes:ro                       # Config Hermes
+      - /RUTA/REAL/DEL/HOST/hermes:/usr/local/bin/hermes:ro
+      - /RUTA/REAL/DEL/HOST/.hermes:/root/.hermes:ro
 ```
 
-O directamente con variables de entorno:
+Primero descubre las rutas reales en el host:
 
 ```bash
-HERMES_MOCK=0 HERMES_PROFILE=hermes1 docker compose up -d
+which hermes
+echo "$HOME"
+ls -la ~/.hermes
 ```
 
-> **Nota**: El bridge ejecuta `hermes -p <profile> chat -q "<mensaje>" --quiet`.
-> Si `hermes` no está disponible dentro del contenedor, monta el binario
-> desde el host o instálalo en una imagen personalizada.
-
-### Logs
+Despues comprueba dentro del contenedor:
 
 ```bash
-# Web
+docker compose exec oficina sh
+/usr/local/bin/hermes -p hermes1 chat -q "Hola, responde breve" --quiet
+```
+
+Si el binario del host es un script que depende de otros runtimes o rutas del host, tambien hay que instalar esas dependencias dentro de la imagen o montar las rutas necesarias.
+
+## Logs
+
+```bash
 docker compose logs -f oficina
-
-# Bridge exclusivamente
 docker compose exec oficina node server/hermes-bridge.mjs
 ```
 
-### Reinicio
+## Reinicio
 
 ```bash
-docker compose down         # Parar
-docker compose up -d        # Reanudar
-docker compose up -d --build  # Reconstruir y arrancar
+docker compose down
+docker compose up -d
+docker compose up -d --build
 ```
 
-### Cómo comprobar que funciona
+## Comprobar Que Funciona
 
-1. **Frontend**: abre `http://localhost:5174` — ves la oficina con agentes.
-2. **Conexión**: el indicador muestra "Conectado (mock)" o "Conectado (hermes)".
-3. **Chat**: escribe un mensaje y pulsa enviar — los agentes reaccionan.
-4. **WebSocket directo**:
-   ```bash
-   wscat -c ws://localhost:8787
-   # → {"type":"bridge.ready","mode":"mock","primaryAgentId":"hermes1"}
-   ```
+1. Frontend: abre `http://localhost:5174` y verifica que ves la oficina.
+2. Conexion: el indicador muestra `Conectado (mock)` o `Conectado (hermes)`.
+3. Chat: envia una tarea y observa que los agentes reaccionan.
+4. WebSocket: prueba `wscat -c ws://localhost:8787`.
+5. Hermes real: en logs debe verse el bridge en modo `hermes` y el contenedor debe poder ejecutar `HERMES_BIN`.
 
 ---
 
-## Ejecutar en desarrollo (sin Docker)
+## Ejecutar En Desarrollo
 
 ```bash
-pnpm install        # o npm install
-pnpm dev            # Modo demo (HERMES_MOCK=1)
+npm install
+npm run dev
+```
 
-# O con Hermes real
-HERMES_MOCK=0 HERMES_PROFILE=hermes1 pnpm dev
+Modo Hermes real:
+
+```bash
+HERMES_MOCK=0 HERMES_PROFILE=hermes1 npm run dev
 ```
 
 Abre `http://localhost:5174`.
 
 ---
 
-## Variables de entorno
+## Variables De Entorno
 
-| Variable                | Default              | Descripción                                |
-|-------------------------|----------------------|--------------------------------------------|
-| `HERMES_MOCK`           | `1`                  | `1` = demo, `0` = real                     |
-| `HERMES_PROFILE`        | `hermes1`            | Perfil de Hermes a usar                    |
-| `HERMES_BRIDGE_PORT`    | `8787`               | Puerto del bridge WebSocket                |
-| `VITE_HERMES_BRIDGE_URL`| `ws://localhost:8787` | URL que usa el frontend para conectar       |
+| Variable | Default | Descripcion |
+| --- | --- | --- |
+| `HERMES_MOCK` | `1` | `1` = demo, `0` = real |
+| `HERMES_PROFILE` | `hermes1` | Perfil de Hermes a usar |
+| `HERMES_BIN` | `hermes` | Ruta o comando del binario Hermes |
+| `HERMES_HOME` | sin valor fijo | Ruta de configuracion de Hermes |
+| `HERMES_BRIDGE_PORT` | `8787` | Puerto del bridge WebSocket |
+| `VITE_HERMES_BRIDGE_URL` | `ws://localhost:8787` | URL que usa el frontend para conectar |
 
 ---
 
 ## Estructura
 
-```
+```text
 oficina/
-├── Dockerfile            # Build multi-etapa
-├── docker-compose.yml    # Orquestación
-├── server.mjs            # Servidor producción (frontend + bridge)
-├── dev.mjs               # Servidor desarrollo (vite dev + bridge)
+├── Dockerfile
+├── docker-compose.yml
+├── server.mjs
+├── dev.mjs
 ├── server/
-│   └── hermes-bridge.mjs # Bridge WebSocket (mock ↔ Hermes real)
+│   └── hermes-bridge.mjs
 ├── src/
-│   ├── App.tsx           # UI principal
-│   ├── main.tsx          # Entry point
-│   ├── types.ts          # Tipos compartidos
-│   └── officeData.ts     # Datos de agentes y oficina
+│   ├── App.tsx
+│   ├── main.tsx
+│   ├── types.ts
+│   └── officeData.ts
 └── vite.config.ts
 ```
+
+## Idea De Producto
+
+- `hermes1` es el agente principal.
+- El usuario solo chatea con `hermes1`.
+- Cada mensaje crea una tarea.
+- Si aparecen delegaciones, se crean subtareas y agentes secundarios automaticamente.
+- Los agentes sin tarea pasean por la oficina.
+- Los agentes con tarea vuelven a su mesa y dicen frases relacionadas con lo que hacen.
