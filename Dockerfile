@@ -9,7 +9,7 @@ ENV VITE_HERMES_BRIDGE_URL=$VITE_HERMES_BRIDGE_URL
 RUN npm run build
 
 # Stage 2: Production
-FROM node:22-alpine
+FROM node:22
 WORKDIR /app
 
 # Solo lo necesario para servir y ejecutar el bridge

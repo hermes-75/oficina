@@ -3,22 +3,20 @@ services:
     build:
       context: .
       args:
-        VITE_HERMES_BRIDGE_URL: ws://localhost:8787
+        VITE_HERMES_BRIDGE_URL: wss://oficina.estrellitastudio.es/ws
     ports:
       - "5174:5174"
       - "8787:8787"
     environment:
-      # Modo demo (sin Hermes CLI real)
-      - HERMES_MOCK=1
-      # Para usar Hermes real instalado en el host:
-      # - HERMES_MOCK=0
-      # - HERMES_PROFILE=hermes1
-      # - HERMES_BIN=/usr/local/bin/hermes
-      # - HERMES_HOME=/root/.hermes
+      - HERMES_MOCK=0
+      - HERMES_PROFILE=hermes1
+      - HERMES_BIN=/home/koday75/.hermes/hermes-agent/venv/bin/hermes
+      - HERMES_HOME=/home/koday75/.hermes
       - HERMES_BRIDGE_PORT=8787
-      - VITE_HERMES_BRIDGE_URL=ws://localhost:8787
-    # Descomenta y ajusta estas rutas si Hermes esta instalado fuera del contenedor.
-    # volumes:
-    #   - /RUTA/REAL/DEL/HOST/hermes:/usr/local/bin/hermes:ro
-    #   - /RUTA/REAL/DEL/HOST/.hermes:/root/.hermes:ro
+    volumes:
+      - /home/koday75/.hermes/hermes-agent/venv:/home/koday75/.hermes/hermes-agent/venv:ro
+      - /home/koday75/.hermes/hermes-agent/skill_index.json:/home/koday75/.hermes/hermes-agent/skill_index.json:ro
+      - /home/koday75/.hermes/config.yaml:/home/koday75/.hermes/config.yaml:ro
+      - /home/koday75/.hermes/.env:/home/koday75/.hermes/.env:ro
+      - /home/koday75/.hermes/profiles:/home/koday75/.hermes/profiles:ro
     restart: unless-stopped
