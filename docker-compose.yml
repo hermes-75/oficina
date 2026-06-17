@@ -14,9 +14,11 @@ services:
       - HERMES_HOME=/home/koday75/.hermes
       - HERMES_BRIDGE_PORT=8787
     volumes:
-      - /home/koday75/.hermes/hermes-agent/venv:/home/koday75/.hermes/hermes-agent/venv:ro
-      - /home/koday75/.hermes/hermes-agent/skill_index.json:/home/koday75/.hermes/hermes-agent/skill_index.json:ro
+      - /home/koday75/.hermes/hermes-agent:/home/koday75/.hermes/hermes-agent:ro
       - /home/koday75/.hermes/config.yaml:/home/koday75/.hermes/config.yaml:ro
       - /home/koday75/.hermes/.env:/home/koday75/.hermes/.env:ro
-      - /home/koday75/.hermes/profiles:/home/koday75/.hermes/profiles:ro
+      - /home/koday75/.hermes/profiles:/home/koday75/.hermes/profiles
+      - /home/koday75/.local/share/uv/python:/home/koday75/.local/share/uv/python:ro
+    env_file:
+      - /home/koday75/.hermes/.env
     restart: unless-stopped
